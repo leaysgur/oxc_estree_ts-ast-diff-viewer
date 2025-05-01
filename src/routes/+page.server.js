@@ -13,8 +13,9 @@ export async function load() {
     ["compiler", "conformance"].map((category) =>
       readFile([import.meta.dirname, "../../generated", category, "index.txt"].join("/"), "utf-8")
         .catch(() => "")
+        .then((data) => (data === "" ? [] : data.split("\n")))
         .then((list) =>
-          list.split("\n").map((line) => {
+          list.map((line) => {
             const [id, added, removed] = line.split("|");
             return { id, added: Number(added), removed: Number(removed) };
           }),
