@@ -53,8 +53,8 @@ for (const cwd of [
     try {
       results.theirs = ensureTrailingComma(parseTheirs(sourceText));
     } catch {
-      // NOTE: Some files are invalid TS, so they cannot parse.
-      // We can safely skip them.
+      // NOTE: Some files are syntactically invalid TS, so they cannot parse.
+      // We can safely skip them too.
       counter.theirsFailed++;
       continue;
     }
@@ -175,7 +175,9 @@ function parseTheirs(code) {
 function parseOurs(code, experimentalRawTransfer = false) {
   const ret = parseSync("foo.ts", code, {
     preserveParens: false,
-    showSemanticErrors: true,
+    // `errorOnTypeScriptSyntacticAndSemanticIssues` is `false` for theirs
+    // https://github.com/peanutenthusiast/typescript-eslint/blob/bca8a914b23d1c2ee07d8416f0f3b9991de85438/packages/parser/src/parser.ts#L124-L126
+    showSemanticErrors: false,
     experimentalRawTransfer,
   });
 
