@@ -7,12 +7,15 @@ import { parseSync } from "../oxc/napi/parser/index.js";
 import { glob } from "tinyglobby";
 
 const IGNORE_LIST = [
-  // https://github.com/typescript-eslint/typescript-eslint/issues/11064
+  // JSDocXxxType: https://github.com/typescript-eslint/typescript-eslint/issues/11064
   "compiler/expressionWithJSDocTypeArguments.ts",
   "compiler/parseInvalidNonNullableTypes.ts",
   "compiler/parseInvalidNullableTypes.ts",
   "conformance/types/tuple/restTupleElements1.ts",
   "conformance/types/tuple/named/namedTupleMembersErrors.ts",
+  // Maximum call stack size exceeded for Node.js by default
+  "compiler/binderBinaryExpressionStress.ts",
+  "compiler/binderBinaryExpressionStressJs.ts",
 ];
 
 const stats = {};

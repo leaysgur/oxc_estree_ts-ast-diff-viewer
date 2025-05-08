@@ -47,6 +47,7 @@ npm i
 
 # create or update indexes in `./generated`
 # This may take about 20~30 sec...
+# You can use `bun` instead of `node`
 node ./create-index.js
 ```
 
