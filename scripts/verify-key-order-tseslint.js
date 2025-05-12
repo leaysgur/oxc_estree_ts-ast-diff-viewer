@@ -3,11 +3,15 @@ import { resolve } from "node:path";
 import { glob } from "tinyglobby";
 import { visitorKeys } from "@typescript-eslint/visitor-keys";
 import { parseSync } from "../../oxc/napi/parser/index.js";
-import { parse } from "@typescript-eslint/parser";
 
-// Check our AST has the same key order across all nodes which has the same type.
+// Check the order of keys in the AST nodes between our parser and theirs.
+//
+// This scripts depends on that our AST has the same key order across all nodes which has the same type.
+// Run `./verify-key-order-oxc.js` first to ensure this.
+//
+// NOTE: Use `bun` to run this script to avoid maximum call stack size exceeded error with Node.js...
 
-const keysCache = new Map();
+const orderMismatches = new Map();
 
 for (const cwd of [
   resolve("../oxc/tasks/coverage/typescript/tests/cases/compiler"),
@@ -20,47 +24,35 @@ for (const cwd of [
     let program;
     try {
       program = parseOurs(absPath, sourceText);
-      // NOTE: Unfortunately, they also have many non-aligned keys!
-      // Comment this out to check the keys for theirs...
-      // program = parseTheirs(sourceText);
     } catch (err) {
       // console.error(err.message);
       continue;
     }
 
     visitNode(program, (node) => {
-      const keys = Object.keys(node).toString();
-      const prevKeys = keysCache.get(node.type);
+      const theirKeys = visitorKeys[node.type] ?? [];
+      // Filter out our keys which contain `type`, `start|end`, and other premitive values like `computed`
+      const ourKeys = Object.keys(node).filter((key) => theirKeys.includes(key));
 
-      // No keys yet, just add it and continue to next
-      if (!prevKeys) {
-        keysCache.set(node.type, [keys]);
-        return;
+      if (ourKeys.toString() !== theirKeys.toString()) {
+        orderMismatches.set(node.type, {
+          theirs: theirKeys,
+          ours: ourKeys,
+        });
       }
-
-      // If the keys are the same, just continue to next
-      if (prevKeys.includes(keys)) return;
-
-      // If the keys are different, report it to fix!
-      keysCache.set(node.type, [...prevKeys, keys]);
     });
   }
 }
 
-const differentKeyOrderForSameNode = new Map(
-  keysCache.entries().filter(([_, keys]) => 1 !== keys.length),
+const sortedOrderMismatches = new Map(
+  [...orderMismatches.entries()]
+    .filter(([type, { theirs, ours }]) => {
+      if (type === "TSModuleDeclaration" && ours.length === 1 && ours[0] === "id") return false;
+      return true;
+    })
+    .sort(([aKey], [bKey]) => aKey.localeCompare(bKey)),
 );
-if (0 === differentKeyOrderForSameNode.size) {
-  console.log("✨", "All keys have the same order across all nodes!");
-} else {
-  console.log("💥", "These keys have different order across all nodes");
-  console.log(differentKeyOrderForSameNode);
-  console.log("NOTE: There are some exceptions that are not aligned,");
-  console.log("- Literal: `regex` and `bigint` keys are only appeared for specific literal types");
-  console.log(
-    "- TSModuleDeclaration: `body` only appears when there is an actual implementation within `{}`",
-  );
-}
+console.log(sortedOrderMismatches);
 
 // ---
 
@@ -81,21 +73,9 @@ function parseOurs(filename, code, experimentalRawTransfer = false) {
   return ret.program;
 }
 
-function parseTheirs(code) {
-  const ast = parse(code, {
-    sourceType: "module",
-    tokens: false,
-    range: false,
-    comments: false,
-  });
-  delete ast.tokens;
-  delete ast.comments;
-
-  return ast;
-}
-
 function visitNode(node, fn) {
   if (!node) return;
+
   if (Array.isArray(node)) {
     for (let i = 0; i < node.length; i++) {
       visitNode(node[i], fn);

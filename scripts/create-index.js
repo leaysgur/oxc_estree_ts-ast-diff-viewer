@@ -63,7 +63,7 @@ for (const cwd of [
     }
 
     try {
-      results.ours = ensureTrailingComma(parseOurs(sourceText));
+      results.ours = ensureTrailingComma(parseOurs(absPath, sourceText));
     } catch {
       // NOTE: Unfortunately, they can parse some files which are invalid for us.
       counter.oursFailed++;
@@ -175,8 +175,8 @@ function parseTheirs(code) {
   }
 }
 
-function parseOurs(code, experimentalRawTransfer = false) {
-  const ret = parseSync("foo.ts", code, {
+function parseOurs(filename, code, experimentalRawTransfer = false) {
+  const ret = parseSync(filename, code, {
     preserveParens: false,
     // `errorOnTypeScriptSyntacticAndSemanticIssues` is `false` for theirs
     // https://github.com/peanutenthusiast/typescript-eslint/blob/bca8a914b23d1c2ee07d8416f0f3b9991de85438/packages/parser/src/parser.ts#L124-L126
