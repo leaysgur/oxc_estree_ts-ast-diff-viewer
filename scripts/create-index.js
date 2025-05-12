@@ -3,7 +3,7 @@ import { resolve, join } from "node:path";
 import { diffLines } from "diff";
 import sortObject from "sort-keys";
 import { parse } from "@typescript-eslint/parser";
-import { parseSync } from "../oxc/napi/parser/index.js";
+import { parseSync } from "../../oxc/napi/parser/index.js";
 import { glob } from "tinyglobby";
 
 const IGNORE_LIST = [
