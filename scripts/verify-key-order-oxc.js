@@ -19,6 +19,7 @@ for (const cwd of [
     try {
       program = parseOurs(sourceText);
       // NOTE: Unfortunately, they also have many non-aligned keys!
+      // Comment this out to check the keys for theirs...
       // program = parseTheirs(sourceText);
     } catch (err) {
       // console.error(err.message);
@@ -32,16 +33,14 @@ for (const cwd of [
       // No keys yet, just add it and continue to next
       if (!prevKeys) {
         keysCache.set(node.type, [keys]);
-        return node;
+        return;
       }
 
       // If the keys are the same, just continue to next
-      if (prevKeys.includes(keys)) return node;
+      if (prevKeys.includes(keys)) return;
 
       // If the keys are different, report it to fix!
       keysCache.set(node.type, [...prevKeys, keys]);
-
-      return node;
     });
   }
 }
@@ -54,6 +53,11 @@ if (0 === differentKeyOrderForSameNode.size) {
 } else {
   console.log("💥", "These keys have different order across all nodes");
   console.log(differentKeyOrderForSameNode);
+  console.log("NOTE: There are some exceptions that are not aligned,");
+  console.log("- Literal: `regex` and `bigint` keys are only appeared for specific literal types");
+  console.log(
+    "- TSModuleDeclaration: `body` only appears when there is an actual implementation within `{}`",
+  );
 }
 
 // ---
@@ -92,12 +96,12 @@ function visitNode(node, fn) {
   if (!node) return node;
   if (Array.isArray(node)) {
     for (let i = 0; i < node.length; i++) {
-      node[i] = visitNode(node[i], fn);
+      visitNode(node[i], fn);
     }
     return node;
   }
   for (const key of visitorKeys[node.type] ?? []) {
-    node[key] = visitNode(node[key], fn);
+    visitNode(node[key], fn);
   }
-  return fn(node) ?? node;
+  fn(node);
 }
