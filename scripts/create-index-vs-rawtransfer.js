@@ -67,20 +67,39 @@ for (const cwd of [
 
     const results = { theirs: null, ours: null };
 
+    let theirsFailed = false;
     try {
       results.theirs = ensureTrailingComma(parseOurs(absPath, sourceText, true));
     } catch {
       // NOTE: Some files are syntactically invalid TS, so they cannot parse.
       // We can safely skip them too.
-      counter.theirsFailed++;
-      continue;
+      theirsFailed = true;
     }
 
+    let oursFailed = false;
     try {
       results.ours = ensureTrailingComma(parseOurs(absPath, sourceText, false));
     } catch {
       // NOTE: Unfortunately, they can parse some files which are invalid for us.
+      oursFailed = true;
+    }
+
+    if (theirsFailed && oursFailed) {
+      // Both parsers failed, so we can skip this file.
+      counter.matched++;
+      continue;
+    }
+
+    if (theirsFailed) {
+      // Theirs parser failed, but ours succeeded.
+      counter.theirsFailed++;
+      console.warn("Theirs parser failed for", id);
+      continue;
+    }
+    if (oursFailed) {
+      // Ours parser failed, but theirs succeeded.
       counter.oursFailed++;
+      console.warn("Ours parser failed for", id);
       continue;
     }
 
