@@ -16,7 +16,7 @@ const IGNORE_LIST = [
   // Maximum call stack size exceeded for Node.js by default
   "compiler/binderBinaryExpressionStress.ts",
   "compiler/binderBinaryExpressionStressJs.ts",
-  // OXC crashes when `import export` is found
+  // OXC crashes when encountering `export import`
   "compiler/es6ImportDefaultBindingFollowedWithNamedImport1WithExport.ts",
   "compiler/es6ImportDefaultBindingFollowedWithNamedImportWithExport.ts",
   "compiler/es6ImportDefaultBindingFollowedWithNamespaceBinding1WithExport.ts",
