@@ -16,6 +16,15 @@ const IGNORE_LIST = [
   // Maximum call stack size exceeded for Node.js by default
   "compiler/binderBinaryExpressionStress.ts",
   "compiler/binderBinaryExpressionStressJs.ts",
+  // OXC crashes when `import export` is found
+  "compiler/es6ImportDefaultBindingFollowedWithNamedImport1WithExport.ts",
+  "compiler/es6ImportDefaultBindingFollowedWithNamedImportWithExport.ts",
+  "compiler/es6ImportDefaultBindingFollowedWithNamespaceBinding1WithExport.ts",
+  "compiler/es6ImportDefaultBindingFollowedWithNamespaceBindingWithExport.ts",
+  "compiler/es6ImportDefaultBindingWithExport.ts",
+  "compiler/es6ImportNameSpaceImportWithExport.ts",
+  "compiler/es6ImportNamedImportWithExport.ts",
+  "compiler/es6ImportWithoutFromClauseWithExport.ts",
 ];
 
 const stats = {};
@@ -49,6 +58,7 @@ for (const cwd of [
     const path = absPath.split(cwd).pop().slice(1).replace(/\//g, ".");
     const id = [category, path].join("/");
 
+    console.log("Parsing", id);
     const sourceText = await readFile(absPath, "utf-8");
 
     const results = { theirs: null, ours: null };
