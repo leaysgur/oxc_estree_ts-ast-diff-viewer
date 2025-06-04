@@ -1,7 +1,6 @@
 import { mkdir, rm, readFile, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { diffLines } from "diff";
-import sortObject from "sort-keys";
 import { parseSync } from "../../oxc/napi/parser/index.js";
 import { glob } from "tinyglobby";
 
@@ -183,8 +182,7 @@ function parseOurs(filename, code, experimentalRawTransfer = false) {
       value.value = null;
     }
 
-    const deep = ["Literal", "TemplateElement"].includes(value.type);
-    return sortObject(value, { deep });
+    return value;
   }
 }
 
