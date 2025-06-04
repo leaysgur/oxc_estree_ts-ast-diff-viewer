@@ -15,8 +15,8 @@
     <h2>{toViewId(selectedId)}</h2>
     <div class="viewer">
       <pre class="source" data-label="SOURCE">{source}</pre>
-      <pre class="ours" data-label="OXC">{ours}</pre>
-      <pre class="theirs" data-label="TS-ESLint">{theirs}</pre>
+      <pre class="ours" data-label="Ours">{ours}</pre>
+      <pre class="theirs" data-label="Theirs">{theirs}</pre>
       <div class="diff" data-label="DIFF">
         <details open>
           <summary>Diff only</summary>
