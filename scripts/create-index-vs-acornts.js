@@ -29,6 +29,10 @@ const IGNORE_LIST = [
   "compiler/complexRecursiveCollections.ts",
   "compiler/privacyTypeParameterOfFunctionDeclFile.ts",
   "compiler/ramdaToolsNoInfinite2.ts",
+  "compiler/bluebirdStaticThis.ts",
+  "compiler/privacyFunctionReturnTypeDeclFile.ts",
+  "compiler/trackedSymbolsNoCrash.ts",
+  "compiler/unionSubtypeReductionErrors.ts",
 ];
 
 const stats = {};
@@ -69,7 +73,7 @@ for (const cwd of [
 
     try {
       results.theirs = ensureTrailingComma(parseTheirs(sourceText));
-    } catch(err) {
+    } catch (err) {
       console.error("💥 Theirs:", err.message);
       // NOTE: Some files are syntactically invalid TS, so they cannot parse.
       // We can safely skip them too.
