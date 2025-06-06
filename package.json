@@ -14,7 +14,9 @@
     "lint": "prettier --check ."
   },
   "dependencies": {
+    "@sveltejs/acorn-typescript": "^1.0.5",
     "@typescript-eslint/parser": "^8.32.0",
+    "acorn": "^8.14.1",
     "diff": "^7.0.0",
     "sort-keys": "^5.1.0",
     "tinyglobby": "^0.2.13"

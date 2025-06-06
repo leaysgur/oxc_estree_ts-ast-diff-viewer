@@ -2,11 +2,10 @@ import { mkdir, rm, readFile, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { diffLines } from "diff";
 import sortObject from "sort-keys";
-import { parse } from "@typescript-eslint/parser";
+import { Parser } from "acorn";
+import { tsPlugin } from "@sveltejs/acorn-typescript";
 import { parseSync } from "../../oxc/napi/parser/index.js";
 import { glob } from "tinyglobby";
-
-const LOOSE = true;
 
 const IGNORE_LIST = [
   // JSDocXxxType: https://github.com/typescript-eslint/typescript-eslint/issues/11064
@@ -18,13 +17,25 @@ const IGNORE_LIST = [
   // Maximum call stack size exceeded for Node.js by default
   "compiler/binderBinaryExpressionStress.ts",
   "compiler/binderBinaryExpressionStressJs.ts",
+  // Slow to diff..
+  "compiler/binaryArithmeticControlFlowGraphNotTooLarge.ts",
+  "compiler/conditionalTypeDiscriminatingLargeUnionRegularTypeFetchingSpeedReasonable.ts",
+  "compiler/enumLiteralsSubtypeReduction.ts",
+  "compiler/largeControlFlowGraph.ts",
+  "compiler/manyConstExports.ts",
+  "compiler/privacyFunctionParameterDeclFile.ts",
+  "compiler/underscoreTest1.ts",
+  "compiler/resolvingClassDeclarationWhenInBaseTypeResolution.ts",
+  "compiler/complexRecursiveCollections.ts",
+  "compiler/privacyTypeParameterOfFunctionDeclFile.ts",
+  "compiler/ramdaToolsNoInfinite2.ts",
 ];
 
 const stats = {};
 
 for (const cwd of [
   resolve("../oxc/tasks/coverage/typescript/tests/cases/compiler"),
-  resolve("../oxc/tasks/coverage/typescript/tests/cases/conformance"),
+  // resolve("../oxc/tasks/coverage/typescript/tests/cases/conformance"),
 ]) {
   const category = cwd.split("/").pop();
 
@@ -58,7 +69,8 @@ for (const cwd of [
 
     try {
       results.theirs = ensureTrailingComma(parseTheirs(sourceText));
-    } catch {
+    } catch(err) {
+      console.error("💥 Theirs:", err.message);
       // NOTE: Some files are syntactically invalid TS, so they cannot parse.
       // We can safely skip them too.
       counter.theirsFailed++;
@@ -129,14 +141,12 @@ const INFINITY_PLACEHOLDER = "__INFINITY__INFINITY__INFINITY__";
 const BIGINT_PLACEHOLDER = "__BIGINT__";
 
 function parseTheirs(code) {
-  const ast = parse(code, {
+  const ast = Parser.extend(tsPlugin()).parse(code, {
+    ecmaVersion: "latest",
     sourceType: "module",
-    tokens: false,
-    range: false,
-    comments: false,
+    locations: true, // Required for `acorn-typescript` to work
+    preserveParens: false,
   });
-  delete ast.tokens;
-  delete ast.comments;
 
   return JSON.stringify(ast, transformerTs, 2);
 
@@ -146,6 +156,9 @@ function parseTheirs(code) {
     if (value === Infinity) return INFINITY_PLACEHOLDER;
 
     if (typeof value !== "object" || value === null || !Object.hasOwn(value, "type")) return value;
+
+    // Not pure JS Object, `Node` is `class`...
+    value = JSON.parse(JSON.stringify(value));
 
     if (value.type === "Literal" && Object.hasOwn(value, "regex")) {
       value.regex.flags = [...value.regex.flags].sort().join("");
@@ -205,8 +218,6 @@ function parseOurs(filename, code, experimentalRawTransfer = false) {
       value.regex.flags = [...value.regex.flags].sort().join("");
       value.value = null;
     }
-
-    if (LOOSE && "phase" in value) value.phase = undefined;
 
     const deep = ["Literal", "TemplateElement"].includes(value.type);
     return sortObject(value, { deep });
